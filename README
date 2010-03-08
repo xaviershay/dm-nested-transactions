@@ -1,7 +1,7 @@
 dm-nested-transactions
 ----------------------
 
-Rails plugin to add nested transaction support to DataMapper. Only tested with Postgres, and it's a bit of a hack, so use at your own risk!
+Adds nested transaction support to DataMapper. Only tested with Postgres, and it's a bit of a hack, so use at your own risk!
 
 Install:
   gem install dm-nested-transactions
