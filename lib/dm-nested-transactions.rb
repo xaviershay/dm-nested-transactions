@@ -5,6 +5,9 @@
 # we need a nested transaction or not, and adds a new NestedTransaction
 # transaction primitive that issues savepoint commands rather than begin/commit.
 
+require 'dm-core'
+require 'data_objects'
+
 module DataMapper
   module Resource
     def transaction(&block)
