@@ -63,7 +63,7 @@ module DataObjects
     #
     def initialize(uri, connection)
       @connection = connection
-      @id = Digest::SHA256.hexdigest("#{HOST}:#{$$}:#{Time.now.to_f}:nested:#{@@counter += 1}")
+      @id = Digest::SHA256.hexdigest("#{HOST}:#{$$}:#{Time.now.to_f}:nested:#{@@counter += 1}")[0..-2]
     end
 
     def close
