@@ -7,6 +7,6 @@ Install:
   gem install dm-nested-transactions
 
 Usage:
-  repository.adapter.extend(DataMapper::NestedTransactinos)
+  repository.adapter.extend(DataMapper::NestedTransactions)
 
 There's a rails/init.rb file that automatically does the above for you. If you are using rails, you probably also want xaviershay-dm-rails since dm-rails 10.2 is broken with transactions.
