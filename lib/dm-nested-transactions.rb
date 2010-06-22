@@ -34,7 +34,7 @@ module DataMapper
 
   module NestedTransactions
     def nested_transaction_primitive
-      DataObjects::NestedTransaction.create_for_uri(normalized_uri, current_connection)
+      DataObjects::NestedTransaction.create_for_uri(normalized_uri, current_connection, self)
     end
   end
 end
@@ -53,35 +53,53 @@ module DataObjects
     # A unique ID for this transaction
     attr_reader :id
 
-    def self.create_for_uri(uri, connection)
+    def self.create_for_uri(uri, connection, adapter)
       uri = uri.is_a?(String) ? URI::parse(uri) : uri
-      DataObjects::NestedTransaction.new(uri, connection)
+      DataObjects::NestedTransaction.new(uri, connection, adapter)
     end
 
     #
     # Creates a NestedTransaction bound to an existing connection
     #
-    def initialize(uri, connection)
+    def initialize(uri, connection, adapter)
+      @adapter    = adapter
       @connection = connection
-      @id = Digest::SHA256.hexdigest("#{HOST}:#{$$}:#{Time.now.to_f}:nested:#{@@counter += 1}")[0..-2]
+      @id = Digest::SHA256.hexdigest("#{HOST}:#{$$}:#{Time.now.to_f}:nested:#{@@counter += 1}")[0..10]
+    end
+
+    def begin_statement
+      lambda{ |id| "SAVEPOINT \"#{id}\"" }
+    end
+
+    def commit_statement
+      case @adapter.class.name
+      when /oracle/i
+        nil
+      else
+        lambda{ |id| "RELEASE SAVEPOINT \"#{id}\"" }
+      end
+    end
+
+    def rollback_statement
+      lambda{ |id| "ROLLBACK TO SAVEPOINT \"#{id}\"" }
     end
 
     def close
     end
 
     def begin
-      cmd = "SAVEPOINT \"#{@id}\""
-      connection.create_command(cmd).execute_non_query
+      connection.create_command(begin_statement.call(@id)).execute_non_query
     end
 
     def commit
-      cmd = "RELEASE SAVEPOINT \"#{@id}\""
-      connection.create_command(cmd).execute_non_query
+      statement = commit_statement
+      if statement
+        connection.create_command(commit_statement.call(@id)).execute_non_query
+      end
     end
 
     def rollback
-      cmd = "ROLLBACK TO SAVEPOINT \"#{@id}\""
-      connection.create_command(cmd).execute_non_query
+      connection.create_command(rollback_statement.call(@id)).execute_non_query
     end
   end
 end
